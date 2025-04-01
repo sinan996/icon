@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>离线图标库 - 设计师的SVG图标管理工具</title>
+    <!-- 引入Bootstrap样式 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <!-- 自定义样式 -->
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/upload-result.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- 侧边栏 -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h3><i class="bi bi-collection"></i> 离线图标库</h3>
+                <p>设计师的SVG图标管理工具</p>
+            </div>
+            <ul class="sidebar-menu">
+                <li data-page="dashboard" class="active"><i class="bi bi-house"></i> 控制台</li>
+                <li data-page="icons"><i class="bi bi-grid"></i> 图标管理</li>
+                <li data-page="categories"><i class="bi bi-tags"></i> 分类管理</li>
+                <li data-page="upload"><i class="bi bi-upload"></i> 上传图标</li>
+                <li data-page="customize"><i class="bi bi-palette"></i> 颜色自定义</li>
+                <li data-page="export"><i class="bi bi-box-arrow-right"></i> 导出图标包</li>
+                <li data-page="settings"><i class="bi bi-gear"></i> 设置</li>
+            </ul>
+            <div class="sidebar-footer">
+                <div id="storage-status">
+                    <i class="bi bi-hdd"></i> 工作目录: <span id="working-directory">未设置</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 主内容区 -->
+        <div class="main-content">
+            <!-- 控制台页面 -->
+            <div id="dashboard-page">
+                <div class="page-header">
+                    <h2><i class="bi bi-speedometer2"></i> 控制台</h2>
+                    <div class="header-actions">
+                        <button id="import-data-btn" class="btn btn-secondary">
+                            <i class="bi bi-upload"></i> 导入数据
+                        </button>
+                        <button id="export-data-btn" class="btn btn-primary">
+                            <i class="bi bi-download"></i> 导出数据
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <i class="bi bi-bar-chart-fill"></i> 图标统计
+                            </div>
+                            <div class="card-body">
+                                <h3 id="icon-count">0</h3>
+                                <p>总图标数量</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <i class="bi bi-folder-fill"></i> 分类统计
+                            </div>
+                            <div class="card-body">
+                                <h3 id="category-count">0</h3>
+                                <p>总分类数量</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <i class="bi bi-hdd-fill"></i> 存储使用
+                            </div>
+                            <div class="card-body">
+                                <h3 id="storage-usage">0 KB</h3>
+                                <p>已使用存储空间</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card mt-4">
+                    <div class="card-header">最近添加的图标</div>
+                    <div class="card-body">
+                        <div id="recent-icons" class="icon-grid">
+                            <!-- 最近图标将在这里动态加载 -->
+                            <div class="empty-state" id="recent-icons-empty">
+                                <i class="bi bi-images"></i>
+                                <h4>暂无图标</h4>
+                                <p>上传一些SVG图标开始使用吧</p>
+                                <button class="btn btn-primary mt-3" id="dashboard-upload-btn">
+                                    <i class="bi bi-upload"></i> 上传图标
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card mt-4">
+                    <div class="card-header">使用指南</div>
+                    <div class="card-body">
+                        <h5>欢迎使用离线图标库！</h5>
+                        <p>这是一个完全离线的SVG图标管理工具，所有数据都存储在您的本地文件系统中。</p>
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle"></i> 首次使用请在<strong>设置</strong>页面选择一个工作目录，用于存储图标和数据文件。
+                        </div>
+                        <ul>
+                            <li><strong>上传图标</strong>：添加您的SVG图标到库中</li>
+                            <li><strong>分类管理</strong>：创建和管理图标分类</li>
+                            <li><strong>颜色自定义</strong>：修改SVG图标的颜色</li>
+                            <li><strong>导出图标包</strong>：导出为多种格式使用</li>
+                            <li><strong>导出数据</strong>：备份您的图标库数据</li>
+                        </ul>
+                        <p>所有数据都保存在您选择的工作目录中，建议定期备份重要数据。</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 图标管理页面 -->
+            <div id="icons-page" class="hidden">
+                <div class="page-header">
+                    <h2><i class="bi bi-grid"></i> 图标管理</h2>
+                    <div class="header-actions">
+                        <button id="add-icon-btn" class="btn btn-primary">
+                            <i class="bi bi-plus"></i> 添加图标
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-body">
+                        <div class="search-box">
+                            <i class="bi bi-search"></i>
+                            <input type="text" id="icon-search" class="form-control" placeholder="搜索图标名称、标签或描述...">
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="card">
+                                    <div class="card-header">分类</div>
+                                    <div class="card-body">
+                                        <ul class="category-tree" id="icon-categories">
+                                            <li class="category-item active" data-category="all">所有图标</li>
+                                            <!-- 分类将在这里动态加载 -->
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-9">
+                                <div id="icons-container" class="icon-grid">
+                                    <!-- 图标将在这里动态加载 -->
+                                </div>
+                                
+                                <div id="icons-empty" class="empty-state">
+                                    <i class="bi bi-emoji-frown"></i>
+                                    <h4>没有找到图标</h4>
+                                    <p>尝试上传一些图标或修改搜索条件</p>
+                                    <button class="btn btn-primary mt-3" id="icons-upload-btn">
+                                        <i class="bi bi-upload"></i> 上传图标
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 分类管理页面 -->
+            <div id="categories-page" class="hidden">
+                <div class="page-header">
+                    <h2><i class="bi bi-tags"></i> 分类管理</h2>
+                    <div class="header-actions">
+                        <button id="add-category-btn" class="btn btn-primary">
+                            <i class="bi bi-plus"></i> 添加分类
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-header">分类列表</div>
+                            <div class="card-body">
+                                <div class="search-box mb-3">
+                                    <i class="bi bi-search"></i>
+                                    <input type="text" id="category-search" class="form-control" placeholder="搜索分类...">
+                                </div>
+                                <ul class="category-tree" id="categories-list">
+                                    <!-- 分类将在这里动态加载 -->
+                                </ul>
+                                <div id="categories-empty" class="empty-state">
+                                    <i class="bi bi-folder-x"></i>
+                                    <h4>暂无分类</h4>
+                                    <p>添加一些分类来组织您的图标</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-8">
+                        <div class="card">
+                            <div class="card-header">分类详情</div>
+                            <div class="card-body" id="category-details">
+                                <div class="empty-state">
+                                    <i class="bi bi-arrow-left-circle"></i>
+                                    <h4>请选择一个分类</h4>
+                                    <p>从左侧列表中选择一个分类查看详情</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="card mt-4">
+                            <div class="card-header">分类图标</div>
+                            <div class="card-body">
+                                <div id="category-icons" class="icon-grid">
+                                    <!-- 分类下的图标将在这里动态加载 -->
+                                </div>
+                                <div id="category-icons-empty" class="empty-state">
+                                    <i class="bi bi-images"></i>
+                                    <h4>暂无图标</h4>
+                                    <p>该分类下还没有图标</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 上传图标页面 -->
+            <div id="upload-page" class="hidden">
+                <div class="page-header">
+                    <h2><i class="bi bi-upload"></i> 上传图标</h2>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">上传SVG图标</div>
+                    <div class="card-body">
+                        <div class="upload-area" id="upload-dropzone">
+                            <i class="bi bi-cloud-upload"></i>
+                            <h4>拖放SVG文件到这里</h4>
+                            <p>或者点击选择文件</p>
+                            <input type="file" id="file-input" multiple accept=".svg" class="hidden">
+                            <button class="btn btn-primary mt-3" id="select-files-btn">
+                                <i class="bi bi-file-earmark-plus"></i> 选择文件
+                            </button>
+                        </div>
+                        
+                        <div class="upload-preview hidden" id="upload-preview">
+                            <h4>上传预览 (<span id="preview-count">0</span>个文件)</h4>
+                            <div class="alert alert-info">
+                                <i class="bi bi-info-circle"></i> 您可以在上传前编辑图标信息和选择分类
+                            </div>
+                            
+                            <div class="form-group mb-3">
+                                <label class="form-label">批量选择分类</label>
+                                <div id="batch-categories" class="category-selector">
+                                    <!-- 分类选择器将在这里动态加载 -->
+                                </div>
+                            </div>
+                            
+                            <div id="preview-list" class="preview-list">
+                                <!-- 预览项将在这里动态加载 -->
+                            </div>
+                            
+                            <div class="upload-actions mt-4">
+                                <button class="btn btn-secondary" id="cancel-upload-btn">
+                                    <i class="bi bi-x"></i> 取消
+                                </button>
+                                <button class="btn btn-primary" id="confirm-upload-btn">
+                                    <i class="bi bi-check2"></i> 确认上传
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 颜色自定义页面 -->
+            <div id="customize-page" class="hidden">
+                <div class="page-header">
+                    <h2><i class="bi bi-palette"></i> 颜色自定义</h2>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-header">选择图标</div>
+                            <div class="card-body">
+                                <div class="search-box mb-3">
+                                    <i class="bi bi-search"></i>
+                                    <input type="text" id="customize-icon-search" class="form-control" placeholder="搜索图标...">
+                                </div>
+                                <div id="customize-icons" class="icon-grid small-grid">
+                                    <!-- 图标将在这里动态加载 -->
+                                </div>
+                                <div id="customize-icons-empty" class="empty-state">
+                                    <i class="bi bi-emoji-frown"></i>
+                                    <h4>没有找到图标</h4>
+                                    <p>尝试上传一些图标或修改搜索条件</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-8">
+                        <div class="card">
+                            <div class="card-header">颜色自定义</div>
+                            <div class="card-body">
+                                <div id="customize-preview" class="customize-preview">
+                                    <div class="empty-state">
+                                        <i class="bi bi-arrow-left-circle"></i>
+                                        <h4>请选择一个图标</h4>
+                                        <p>从左侧列表中选择一个图标进行颜色自定义</p>
+                                    </div>
+                                </div>
+                                
+                                <div id="color-customizer" class="color-customizer hidden">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="preview-container">
+                                                <h5>预览</h5>
+                                                <div id="color-preview" class="color-preview-box"></div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <h5>颜色设置</h5>
+                                            <div id="color-settings">
+                                                <!-- 颜色设置将在这里动态加载 -->
+                                            </div>
+                                            <div class="mt-3">
+                                                <button class="btn btn-secondary" id="reset-colors-btn">
+                                                    <i class="bi bi-arrow-counterclockwise"></i> 重置颜色
+                                                </button>
+                                                <button class="btn btn-primary" id="save-colors-btn">
+                                                    <i class="bi bi-check2"></i> 保存设置
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="card mt-4">
+                            <div class="card-header">使用说明</div>
+                            <div class="card-body">
+                                <h5>颜色自定义功能说明</h5>
+                                <ul>
+                                    <li>单色图标：可以直接修改图标的主要颜色</li>
+                                    <li>多色图标：可以分别修改图标中的不同颜色部分</li>
+                                    <li>保存设置后，颜色信息将与图标一起保存</li>
+                                    <li>导出时，颜色信息将包含在导出的JSON文件中</li>
+                                </ul>
+                                <div class="alert alert-info">
+                                    <i class="bi bi-info-circle"></i> 前端开发人员可以使用导出的JSON文件中的颜色信息来自定义图标颜色。
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 导出图标包页面 -->
+            <div id="export-page" class="hidden">
+                <div class="page-header">
+                    <h2><i class="bi bi-box-arrow-right"></i> 导出图标包</h2>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-header">选择导出内容</div>
+                            <div class="card-body">
+                                <div class="form-group mb-3">
+                                    <label class="form-label">导出范围</label>
+                                    <select id="export-scope" class="form-control">
+                                        <option value="all">所有图标</option>
+                                        <option value="selected">选定图标</option>
+                                        <option value="category">按分类</option>
+                                    </select>
+                                </div>
+                                
+                                <div id="export-category-selector" class="form-group mb-3 hidden">
+                                    <label class="form-label">选择分类</label>
+                                    <select id="export-category" class="form-control">
+                                        <!-- 分类将在这里动态加载 -->
+                                    </select>
+                                </div>
+                                
+                                <div id="export-icon-selector" class="hidden">
+                                    <label class="form-label">选择图标</label>
+                                    <div class="search-box mb-3">
+                                        <i class="bi bi-search"></i>
+                                        <input type="text" id="export-icon-search" class="form-control" placeholder="搜索图标...">
+                                    </div>
+                                    <div id="export-icons" class="icon-grid small-grid">
+                                        <!-- 图标将在这里动态加载 -->
+                                    </div>
+                                </div>
+                                
+                                <div class="form-group mb-3">
+                                    <label class="form-label">导出格式</label>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="export-json" checked>
+                                        <label class="form-check-label" for="export-json">
+                                            JSON文件 (前端开发使用)
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="export-svg">
+                                        <label class="form-check-label" for="export-svg">
+                                            SVG文件
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="export-zip">
+                                        <label class="form-check-label" for="export-zip">
+                                            打包为ZIP文件
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <button class="btn btn-primary" id="generate-export-btn">
+                                    <i class="bi bi-gear"></i> 生成导出文件
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-8">
+                        <div class="card">
+                            <div class="card-header">导出预览</div>
+                            <div class="card-body">
+                                <div id="export-preview" class="export-preview">
+                                    <div class="empty-state">
+                                        <i class="bi bi-file-earmark-code"></i>
+                                        <h4>导出预览</h4>
+                                        <p>选择导出选项并点击"生成导出文件"按钮查看预览</p>
+                                    </div>
+                                </div>
+                                
+                                <div id="export-result" class="export-result hidden">
+                                    <h5>导出结果</h5>
+                                    <div class="alert alert-success">
+                                        <i class="bi bi-check-circle"></i> 导出文件已生成
+                                    </div>
+                                    
+                                    <div class="export-files">
+                                        <div class="export-file-item">
+                                            <i class="bi bi-file-earmark-code"></i>
+                                            <span class="file-name">icon-library.json</span>
+                                            <button class="btn btn-sm btn-primary download-btn" data-file="icon-library.json">
+                                                <i class="bi bi-download"></i> 下载
+                                            </button>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mt-3">
+                                        <h5>使用说明</h5>
+                                        <div class="code-block">
+                                            <pre><code id="usage-code">// 代码示例将在这里动态生成</code></pre>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="card mt-4">
+                            <div class="card-header">开发者文档</div>
+                            <div class="card-body">
+                                <h5>如何在前端项目中使用图标</h5>
+                                <p>导出的JSON文件包含了所有图标的路径数据和颜色信息，可以在前端项目中直接使用。</p>
+                                <div class="code-block">
+                                    <pre><code>// 引入图标数据
+import iconData from './icon-library.json';
+
+// 在React组件中使用
+function Icon({ name, color, size = 24 }) {
+  const icon = iconData.icons[name];
+  if (!icon) return null;
+  
+  return (
+    &lt;svg 
+      width={size} 
+      height={size} 
+      viewBox={`0 0 ${icon.width} ${icon.height}`}
+      fill={color || icon.color}
+    &gt;
+      &lt;path d={icon.path} /&gt;
+    &lt;/svg&gt;
+  );
+}</code></pre>
+                                </div>
+                                <p>多色图标的使用方法：</p>
+                                <div class="code-block">
+                                    <pre><code>// 多色图标使用
+function MultiColorIcon({ name, colors, size = 24 }) {
+  const icon = iconData.icons[name];
+  if (!icon) return null;
+  
+  // 合并默认颜色和自定义颜色
+  const finalColors = { ...icon.colors, ...colors };
+  
+  return (
+    &lt;svg 
+      width={size} 
+      height={size} 
+      viewBox={`0 0 ${icon.width} ${icon.height}`}
+    &gt;
+      {icon.paths.map((path, index) => (
+        &lt;path 
+          key={index} 
+          d={path.d} 
+          fill={finalColors[path.colorId] || path.color} 
+        /&gt;
+      ))}
+    &lt;/svg&gt;
+  );
+}</code></pre>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 设置页面 -->
+            <div id="settings-page" class="hidden">
+                <div class="page-header">
+                    <h2><i class="bi bi-gear"></i> 设置</h2>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">工作目录设置</div>
+                    <div class="card-body">
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle"></i> 工作目录用于存储图标文件和数据文件。请选择一个空目录作为工作目录。
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">当前工作目录</label>
+                            <div class="input-group">
+                                <input type="text" id="working-dir-input" class="form-control" readonly>
+                                <button class="btn btn-primary" id="select-dir-btn">
+                                    <i class="bi bi-folder"></i> 选择目录
+                                </button>
+                            </div>
+                            <div class="form-text">选择一个目录用于存储图标库的所有文件</div>
+                        </div>
+                        
+                        <div id="dir-status" class="mt-3 hidden">
+                            <div class="alert alert-success">
+                                <i class="bi bi-check-circle"></i> 工作目录已设置
+                            </div>
+                            <p>目录结构将自动创建：</p>
+                            <ul>
+                                <li><code>/icons</code> - 存储SVG图标文件</li>
+                                <li><code>/data</code> - 存储图标和分类数据</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card mt-4">
+                    <div class="card-header">应用设置</div>
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label class="form-label">自动保存</label>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="auto-save" checked>
+                                <label class="form-check-label" for="auto-save">启用自动保存</label>
+                            </div>
+                            <div class="form-text">启用后，所有更改将自动保存到工作目录</div>
+                        </div>
+                        
+                        <div class="form-group mt-3">
+                            <label class="form-label">备份设置</label>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="auto-backup">
+                                <label class="form-check-label" for="auto-backup">启用自动备份</label>
+                            </div>
+                            <div class="form-text">启用后，系统将定期创建数据备份</div>
+                        </div>
+                        
+                        <div class="form-group mt-3">
+                            <label class="form-label">存储模式</label>
+                            <select id="storage-mode" class="form-control">
+                                <option value="fs-api">文件系统API (推荐)</option>
+                                <option value="local-storage">本地存储 + 文件导入/导出</option>
+                            </select>
+                            <div class="form-text">选择数据存储方式，文件系统API需要现代浏览器支持</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card mt-4">
+                    <div class="card-header">数据管理</div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h5>导入数据</h5>
+                                <p>从备份文件恢复数据</p>
+                                <button class="btn btn-primary" id="import-backup-btn">
+                                    <i class="bi bi-upload"></i> 导入备份
+                                </button>
+                            </div>
+                            <div class="col-md-6">
+                                <h5>导出数据</h5>
+                                <p>将所有数据导出为备份文件</p>
+                                <button class="btn btn-primary" id="export-backup-btn">
+                                    <i class="bi bi-download"></i> 导出备份
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-4">
+                            <h5>重置数据</h5>
+                            <p>清除所有数据并重置应用</p>
+                            <button class="btn btn-danger" id="reset-data-btn">
+                                <i class="bi bi-trash"></i> 重置数据
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 模态框 -->
+    <!-- 图标详情模态框 -->
+    <div class="modal-backdrop hidden" id="icon-detail-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5>图标详情</h5>
+                <button class="btn-close" data-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="icon-detail-preview" id="detail-preview"></div>
+                    </div>
+                    <div class="col-md-8">
+                        <div class="form-group">
+                            <label class="form-label">图标名称</label>
+                            <input type="text" id="detail-name" class="form-control">
+                        </div>
+                        <div class="form-group mt-3">
+                            <label class="form-label">描述</label>
+                            <textarea id="detail-description" class="form-control" rows="2"></textarea>
+                        </div>
+                        <div class="form-group mt-3">
+                            <label class="form-label">标签</label>
+                            <input type="text" id="detail-tags" class="form-control" placeholder="用逗号分隔多个标签">
+                            <div class="tag-container" id="detail-tag-container"></div>
+                        </div>
+                        <div class="form-group mt-3">
+                            <label class="form-label">分类</label>
+                            <div id="detail-categories" class="category-selector"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <h6>SVG代码</h6>
+                    <div class="code-block">
+                        <pre><code id="detail-svg-code"></code></pre>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-danger" id="delete-icon-btn">
+                    <i class="bi bi-trash"></i> 删除
+                </button>
+                <button class="btn btn-secondary" id="replace-icon-btn">
+                    <i class="bi bi-arrow-repeat"></i> 替换
+                </button>
+                <button class="btn btn-primary" id="save-icon-btn">
+                    <i class="bi bi-check2"></i> 保存
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 分类编辑模态框 -->
+    <div class="modal-backdrop hidden" id="category-edit-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 id="category-modal-title">添加分类</h5>
+                <button class="btn-close" data-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">分类名称</label>
+                    <input type="text" id="category-name" class="form-control">
+                </div>
+                <div class="form-group mt-3">
+                    <label class="form-label">描述</label>
+                    <textarea id="category-description" class="form-control" rows="2"></textarea>
+                </div>
+                <div class="form-group mt-3">
+                    <label class="form-label">父分类</label>
+                    <select id="category-parent" class="form-control">
+                        <option value="">无 (顶级分类)</option>
+                        <!-- 分类将在这里动态加载 -->
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-danger hidden" id="delete-category-btn">
+                    <i class="bi bi-trash"></i> 删除
+                </button>
+                <button class="btn btn-secondary" data-dismiss="modal">
+                    <i class="bi bi-x"></i> 取消
+                </button>
+                <button class="btn btn-primary" id="save-category-btn">
+                    <i class="bi bi-check2"></i> 保存
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 确认模态框 -->
+    <div class="modal-backdrop hidden" id="confirm-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 id="confirm-title">确认操作</h5>
+                <button class="btn-close" data-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p id="confirm-message">您确定要执行此操作吗？</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-dismiss="modal">
+                    <i class="bi bi-x"></i> 取消
+                </button>
+                <button class="btn btn-primary" id="confirm-ok-btn">
+                    <i class="bi bi-check2"></i> 确认
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 提示框 -->
+    <div class="toast-container" id="toast-container">
+        <!-- 提示框将在这里动态加载 -->
+    </div>
+    
+    <!-- 引入Bootstrap脚本 -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- 引入JSZip库，用于ZIP文件生成 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <!-- 引入FileSaver库，用于文件保存 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    
+    <!-- 自定义脚本 -->
+    <script src="js/utils.js"></script>
+    <script src="js/file-system.js"></script>
+    <script src="js/icon-manager.js"></script>
+    <script src="js/category-manager.js"></script>
+    <script src="js/color-customizer.js"></script>
+    <script src="js/export-manager.js"></script>
+    <script src="js/ui-controller.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
